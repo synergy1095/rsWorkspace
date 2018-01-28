@@ -286,7 +286,7 @@ int main(int argc, char **argv){
   task_emergeXft                = true;
   task_emergeToTop              = true;
   task_rotateRightXd1           = true;
-  task_rotateRightXd2           = false;
+  task_rotateRightXd2           = true;
   task_rotateRightXd3           = true;
   task_rotateLeftXd1            = true;
   task_rotateLeftXd2            = true;
@@ -320,8 +320,8 @@ int main(int argc, char **argv){
   task_gate2_emergeToTop        = true;
 
   task_rotateLeftXd4            = true;
-  task_mode5Movement5           = true;
-  task_mode5Movement6           = true;
+  task_mode5Movement5           = false;
+  task_mode5Movement6           = false;
 
   task_buoy1_submergeXft        = true;
   task_buoy1_findBuoy           = true;
@@ -408,7 +408,7 @@ int main(int argc, char **argv){
   }
 
   resetVariables();
-  // breakBetweenTasks(120);
+  breakBetweenTasks(10);
    
   //Task =======================================================================
   if(!task_turnOnMotors) ROS_INFO("Turning on motors...");
@@ -427,10 +427,10 @@ int main(int argc, char **argv){
   }
 
   resetVariables();
-  breakBetweenTasks(30);
+  //breakBetweenTasks(30);
 
   //Task =======================================================================
-  heightToMove = 2.5;
+  heightToMove = 1.5;
   while(ros::ok() && !task_submergeXft){
     if(!receivedFromHControl){
       hControl.state = 0;
@@ -446,7 +446,7 @@ int main(int argc, char **argv){
   }
 
   resetVariables();
-  // breakBetweenTasks(10);
+  breakBetweenTasks(2);
 
   if(!startTakingPicture) ROS_INFO("start taking picture.");
   while(!startTakingPicture){
@@ -722,7 +722,7 @@ int main(int argc, char **argv){
 
   //Task =======================================================================
   motorPower = 150;
-  motorRunningTime = 10;
+  motorRunningTime = 5;
   directionToMove = 1;
   while (ros::ok() && !task_mode5Movement3){
     if(!receivedFromMControl){
@@ -1072,7 +1072,7 @@ int main(int argc, char **argv){
   resetVariables();
 
   //Task =======================================================================
-  angleToTurn = 15;
+  angleToTurn = 180;
   while (ros::ok() && !task_rotateLeftXd4){
     if(!receivedFromRControl){
       rControl.state = 0;
@@ -1090,7 +1090,7 @@ int main(int argc, char **argv){
 
   //Task =======================================================================
   motorPower = 150;
-  motorRunningTime = 24;
+  motorRunningTime = 5;
   directionToMove = 1;
   while (ros::ok() && !task_mode5Movement5){
     if(!receivedFromMControl){
@@ -1871,6 +1871,7 @@ int main(int argc, char **argv){
   }
 
   resetVariables();
+  breakBetweenTasks(10);
 
   //Task =======================================================================
   while (ros::ok() && !task_emergeToTop_2){
