@@ -1002,10 +1002,10 @@ void heightControl(){
     //Testing--------------------------
     //feetDepth_read += 0.08;
 
-    base_thrust_1 = base_thrust + pwm_submerge; 
-    base_thrust_2 = base_thrust - pwm_submerge;
-    base_thrust_3 = base_thrust + pwm_submerge;
-    base_thrust_4 = base_thrust - pwm_submerge;
+    base_thrust_1 = base_thrust + PWM_Motors_Depth; 
+    base_thrust_2 = base_thrust - PWM_Motors_Depth;
+    base_thrust_3 = base_thrust + PWM_Motors_Depth;
+    base_thrust_4 = base_thrust - PWM_Motors_Depth;
   }
   //Going up
   else if (feetDepth_read > assignedDepth){
@@ -1015,10 +1015,10 @@ void heightControl(){
     //Testing---------------------------
     //feetDepth_read -= 0.08;
 
-    base_thrust_1 = base_thrust - pwm_emerge; 
-    base_thrust_2 = base_thrust + pwm_emerge;
-    base_thrust_3 = base_thrust - pwm_emerge;
-    base_thrust_4 = base_thrust + pwm_emerge;
+    base_thrust_1 = base_thrust - PWM_Motors_Depth; 
+    base_thrust_2 = base_thrust + PWM_Motors_Depth;
+    base_thrust_3 = base_thrust - PWM_Motors_Depth;
+    base_thrust_4 = base_thrust + PWM_Motors_Depth;
   }
   else{
     // base_thrust_1 = base_thrust; 
