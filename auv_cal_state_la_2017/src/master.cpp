@@ -255,6 +255,8 @@ int main(int argc, char **argv){
   //---------------------------------------------------------
   ros::Subscriber cvSubscriber = node.subscribe("cv_to_master", 0, CVInCallback);
   //---------------------------------------------------------
+  ros::Publisher cvPublisher = node.advertise<auv_cal_state_la_2017::CVOut>("master_to_cv", 100);
+  //---------------------------------------------------------
   
   ros::Publisher pControlPublisher = node.advertise<std_msgs::Int32>("pneumatics_control", 100);
   ros::Publisher hControlPublisher = node.advertise<auv_cal_state_la_2017::HControl>("height_control", 100);
