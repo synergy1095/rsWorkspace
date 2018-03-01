@@ -58,6 +58,8 @@ add_message_files(
   FrontCamDistance.msg
   BottomCamDistance.msg
   Hydrophone.msg
+  CVIn.msg
+  CVOut.msg
 )
 
 ## Generate services in the 'srv' folder

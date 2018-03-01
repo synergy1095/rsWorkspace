@@ -11,6 +11,8 @@
 #include "auv_cal_state_la_2017/TargetInfo.h"
 #include "auv_cal_state_la_2017/CVInfo.h"
 #include "auv_cal_state_la_2017/Hydrophone.h"
+#include "auv_cal_state_la_2017/CVIn.h"
+#include "auv_cal_state_la_2017/CVOut.h"
 #include <sstream>
 
 // height_control: (int) state, (float) depth
@@ -60,6 +62,11 @@ auv_cal_state_la_2017::RControl rControl;
 auv_cal_state_la_2017::MControl mControl;
 auv_cal_state_la_2017::CVInfo cvInfo;
 
+//---------------------------------------------------------
+auv_cal_state_la_2017::CVIn cvIn;
+auv_cal_state_la_2017::CVOut cvOut;
+//---------------------------------------------------------
+
 //Subscriber callback functions
 void currentDepthCallback(const std_msgs::Float32& currentDepth);
 void currentRotationCallback(const ez_async_data::Rotation rotation);
@@ -72,6 +79,20 @@ void bottomCamDistanceCallback(const auv_cal_state_la_2017::BottomCamDistance bc
 void targetInfoCallback(const auv_cal_state_la_2017::TargetInfo ti);
 void hydrophoneCallback(const auv_cal_state_la_2017::Hydrophone hy);
 void takePictureCallback(const std_msgs::Int32 tp);
+
+//added callback functions
+void cvHLeft();
+void cvHRight();
+void cvHStop();
+void cvVUp();
+void cvVDown();
+void cvVStop();
+void CVInCallback(const auv_cal_state_la_2017::CVIn in);
+
+typedef void (*fn)();
+
+static const fn hFuncs[] = { cvHLeft, cvHStop, cvHRight };
+static const fn vFuncs[] = { cvVDown, cvVStop, cvVUp };
 
 //Regular functions
 void checkMotorNode();
@@ -217,6 +238,7 @@ int main(int argc, char **argv){
 
   //Initializing ROS variables
   ros::init(argc, argv, "master");
+  
   ros::NodeHandle node;
   ros::Subscriber currentDepthSubscriber = node.subscribe("current_depth", 100, currentDepthCallback);
   ros::Subscriber currentRotationSubscriber = node.subscribe("current_rotation", 100, currentRotationCallback);
@@ -229,6 +251,11 @@ int main(int argc, char **argv){
   ros::Subscriber targetInfoSubscriber = node.subscribe("target_info", 100, targetInfoCallback);
   ros::Subscriber hydrophoneSubscriber = node.subscribe("hydrophone", 100, hydrophoneCallback);
   ros::Subscriber takePictureSubscriber = node.subscribe("take_picture_status", 100,takePictureCallback);
+
+  //---------------------------------------------------------
+  ros::Subscriber cvSubscriber = node.subscribe("cv_to_master", 0, CVInCallback);
+  //---------------------------------------------------------
+  
   ros::Publisher pControlPublisher = node.advertise<std_msgs::Int32>("pneumatics_control", 100);
   ros::Publisher hControlPublisher = node.advertise<auv_cal_state_la_2017::HControl>("height_control", 100);
   ros::Publisher rControlPublisher = node.advertise<auv_cal_state_la_2017::RControl>("rotation_control", 100);
@@ -1913,6 +1940,41 @@ int main(int argc, char **argv){
     loop_rate.sleep();
   }
   return 0;
+}
+
+void cvHLeft(){
+  ROS_INFO("Sub turning left.");
+  //todo
+}
+void cvHRight(){
+  ROS_INFO("Sub turning right.");
+  //todo
+}
+void cvHStop(){
+  ROS_INFO("Sub stopping turn.");
+  //todo
+}
+void cvVUp(){
+  ROS_INFO("Sub going up.");
+  //todo
+}
+void cvVDown(){
+  ROS_INFO("Sub going down.");
+  //todo
+}
+void cvVStop(){
+  ROS_INFO("Sub stopping vertical movement.");
+  //todo
+}
+
+void CVInCallback(const auv_cal_state_la_2017::CVIn in){
+  if(in.horizontal < -1 || in.horizontal > 1 || in.vertical < -1 || in.horizontal > 1)
+    return;
+
+  if(in.found == 1){
+    hFuncs[in.horizontal + 1]();
+    vFuncs[in.vertical + 1]();
+  }
 }
 
 
