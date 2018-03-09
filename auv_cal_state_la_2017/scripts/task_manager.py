@@ -4,7 +4,10 @@ from std_msgs.msg import Int32MultiArray
 
 from modules.sensors.computer_vision import DetectBuoy
 from modules.sensors.computer_vision import DiceDetector
-from modules.control.navigation import Navigation
+#from modules.control.navigation import Navigation
+from auv_cal_state_la_2017.msg import CVIn
+from auv_cal_state_la_2017.msg import CVOut
+
 
 
 class TaskManager():
@@ -14,8 +17,8 @@ class TaskManager():
         """ To initialize the TaskManger. """
 
         self.coordinates = []
-        self.navigation = Navigation()
-        #rospy.init_node('task_manager')
+        #self.navigation = Navigation()
+        rospy.init_node('task_manager')
         #self.is_killswitch_on = navigation.check_kill()
 
     def detect_gate(self):
@@ -39,7 +42,7 @@ class TaskManager():
         #self.coordinates.append(randint(-1,1))
         #self.coordinates.append(randint(-1,1))
         dice_coordinates = detectdice.locate_dice()
-        self.navigation.nagivate(dice_coordinates)
+        #self.navigation.nagivate(dice_coordinates)
 
     def detect_roulette(self):
         """ When roulette_detect task is called. """
@@ -76,9 +79,23 @@ class TaskManager():
         buoy_coordinates = detectbuoy.detect()
 
         # TODO send coordinates to Houston
+        pub = rospy.Publisher('cv_to_master', CVIn)
+        rospy.init_node('custom_talker', anonymous=True)
+        r = rospy.Rate(30) #30hz
+        msg = CVIn()
+        msg.found = 1
+        msg.horizontal = -1
+        msg.vertical = -1
+        msg.distance = 1.25
+        msg.targetType = 1.0
+
+        while not rospy.is_shutdown():
+            rospy.loginfo(msg)
+            pub.publish(msg)
+            r.sleep()
 
 
-        self.navigation.nagivate(buoy_coordinates)
+        #self.navigation.nagivate(buoy_coordinates)
 
         '''pub_task = rospy.Publisher('coordinates', Int32MultiArray, queue_size=10)
         pub_array = Int32MultiArray(data=buoy_coordinates)
@@ -94,18 +111,18 @@ class TaskManager():
 
         rospy.loginfo('Receiving coordinates from buoy_coordinates')
         coordinates = data.data
-        self.navigation.navigate(coordinates)
+        #self.navigation.navigate(coordinates)
 
     def brake(self):
         """ When brake task is called by auv.py. """
 
-        navigation.brake(self)
+        #navigation.brake(self)
     
     def start(self):
         """ Starts TaskManager. """
 
         # TODO perhaps start needs to be call along with which task you would like to perform
-        self.navigation.start()
+        #self.navigation.start()
         
     def stop(self):
         """ Stops TasksManager. """
