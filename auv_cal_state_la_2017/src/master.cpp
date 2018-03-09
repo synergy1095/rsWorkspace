@@ -237,6 +237,7 @@ bool task_emergeToTop_2;
 
 bool task_turnOffMotors;
 
+//ros publisher and subscribers
 ros::Subscriber currentDepthSubscriber;
 ros::Subscriber currentRotationSubscriber;
 ros::Subscriber pControlStatusSubscriber;
