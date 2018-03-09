@@ -2035,7 +2035,7 @@ void cvHStop(){
   ROS_INFO("Sub stopping turn.");
 }
 void cvVUp(){
-  hControl.state = 1
+  hControl.state = 1;
   hControlPublisher.publish(hControl);
   ROS_INFO("Sub going up.");
   hControl.state = 2;
@@ -2043,7 +2043,7 @@ void cvVUp(){
   hControlPublisher.publish(hControl);
 }
 void cvVDown(){
-  hControl.state = 1
+  hControl.state = 1;
   hControlPublisher.publish(hControl);
   ROS_INFO("Sub going down.");
   hControl.state = 0;
@@ -2051,7 +2051,7 @@ void cvVDown(){
   hControlPublisher.publish(hControl);
 }
 void cvVStop(){
-  hControl.state = 1
+  hControl.state = 1;
   hControlPublisher.publish(hControl);
   ROS_INFO("Sub stopping vertical movement.");
 }
