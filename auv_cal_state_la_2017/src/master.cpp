@@ -237,36 +237,61 @@ bool task_emergeToTop_2;
 
 bool task_turnOffMotors;
 
+ros::Subscriber currentDepthSubscriber;
+ros::Subscriber currentRotationSubscriber;
+ros::Subscriber pControlStatusSubscriber;
+ros::Subscriber hControlStatusSubscriber;
+ros::Subscriber rControlStatusSubscriber;
+ros::Subscriber mControlStatusSubscriber;
+ros::Subscriber frontCamDistanceSubscriber;
+ros::Subscriber bottomCamDistanceSubscriber;
+ros::Subscriber targetInfoSubscriber;
+ros::Subscriber hydrophoneSubscriber;
+ros::Subscriber takePictureSubscriber;
+
+//---------------------------------------------------------
+ros::Subscriber cvSubscriber;
+//---------------------------------------------------------
+ros::Publisher cvPublisher;
+//---------------------------------------------------------
+
+ros::Publisher pControlPublisher;
+ros::Publisher hControlPublisher;
+ros::Publisher rControlPublisher;
+ros::Publisher mControlPublisher;
+ros::Publisher cvInfoPublisher;
+ros::Publisher takePicturePublisher;
+
 int main(int argc, char **argv){
 
   //Initializing ROS variables
   ros::init(argc, argv, "master");
   
   ros::NodeHandle node;
-  ros::Subscriber currentDepthSubscriber = node.subscribe("current_depth", 100, currentDepthCallback);
-  ros::Subscriber currentRotationSubscriber = node.subscribe("current_rotation", 100, currentRotationCallback);
-  ros::Subscriber pControlStatusSubscriber = node.subscribe("pneumatics_control_status", 100, pControlStatusCallback);
-  ros::Subscriber hControlStatusSubscriber = node.subscribe("height_control_status", 100, hControlStatusCallback);
-  ros::Subscriber rControlStatusSubscriber = node.subscribe("rotation_control_status", 100, rControlStatusCallback);
-  ros::Subscriber mControlStatusSubscriber = node.subscribe("movement_control_status", 100, mControlStatusCallback);
-  ros::Subscriber frontCamDistanceSubscriber = node.subscribe("front_cam_distance", 100, frontCamDistanceCallback);
-  ros::Subscriber bottomCamDistanceSubscriber = node.subscribe("bottom_cam_distance", 100, bottomCamDistanceCallback);
-  ros::Subscriber targetInfoSubscriber = node.subscribe("target_info", 100, targetInfoCallback);
-  ros::Subscriber hydrophoneSubscriber = node.subscribe("hydrophone", 100, hydrophoneCallback);
-  ros::Subscriber takePictureSubscriber = node.subscribe("take_picture_status", 100,takePictureCallback);
+  currentDepthSubscriber = node.subscribe("current_depth", 100, currentDepthCallback);
+  currentRotationSubscriber = node.subscribe("current_rotation", 100, currentRotationCallback);
+  pControlStatusSubscriber = node.subscribe("pneumatics_control_status", 100, pControlStatusCallback);
+  hControlStatusSubscriber = node.subscribe("height_control_status", 100, hControlStatusCallback);
+  rControlStatusSubscriber = node.subscribe("rotation_control_status", 100, rControlStatusCallback);
+  mControlStatusSubscriber = node.subscribe("movement_control_status", 100, mControlStatusCallback);
+  frontCamDistanceSubscriber = node.subscribe("front_cam_distance", 100, frontCamDistanceCallback);
+  bottomCamDistanceSubscriber = node.subscribe("bottom_cam_distance", 100, bottomCamDistanceCallback);
+  targetInfoSubscriber = node.subscribe("target_info", 100, targetInfoCallback);
+  hydrophoneSubscriber = node.subscribe("hydrophone", 100, hydrophoneCallback);
+  takePictureSubscriber = node.subscribe("take_picture_status", 100,takePictureCallback);
 
   //---------------------------------------------------------
-  ros::Subscriber cvSubscriber = node.subscribe("cv_to_master", 100, CVInCallback);
+  cvSubscriber = node.subscribe("cv_to_master", 100, CVInCallback);
   //---------------------------------------------------------
-  ros::Publisher cvPublisher = node.advertise<auv_cal_state_la_2017::CVOut>("master_to_cv", 100);
+  cvPublisher = node.advertise<auv_cal_state_la_2017::CVOut>("master_to_cv", 100);
   //---------------------------------------------------------
   
-  ros::Publisher pControlPublisher = node.advertise<std_msgs::Int32>("pneumatics_control", 100);
-  ros::Publisher hControlPublisher = node.advertise<auv_cal_state_la_2017::HControl>("height_control", 100);
-  ros::Publisher rControlPublisher = node.advertise<auv_cal_state_la_2017::RControl>("rotation_control", 100);
-  ros::Publisher mControlPublisher = node.advertise<auv_cal_state_la_2017::MControl>("movement_control", 100);
-  ros::Publisher cvInfoPublisher = node.advertise<auv_cal_state_la_2017::CVInfo>("cv_info", 100);
-  ros::Publisher takePicturePublisher = node.advertise<std_msgs::Int32>("take_picture", 100);
+  pControlPublisher = node.advertise<std_msgs::Int32>("pneumatics_control", 100);
+  hControlPublisher = node.advertise<auv_cal_state_la_2017::HControl>("height_control", 100);
+  rControlPublisher = node.advertise<auv_cal_state_la_2017::RControl>("rotation_control", 100);
+  mControlPublisher = node.advertise<auv_cal_state_la_2017::MControl>("movement_control", 100);
+  cvInfoPublisher = node.advertise<auv_cal_state_la_2017::CVInfo>("cv_info", 100);
+  takePicturePublisher = node.advertise<std_msgs::Int32>("take_picture", 100);
   ros::Rate loop_rate(10);
 
   resetVariables();
