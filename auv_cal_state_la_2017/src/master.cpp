@@ -88,6 +88,7 @@ void cvVUp();
 void cvVDown();
 void cvVStop();
 void CVInCallback(const auv_cal_state_la_2017::CVIn in);
+void setCVOut(float targetType);
 
 typedef void (*fn)();
 
@@ -230,6 +231,8 @@ bool task_cv_centering_1;
 bool task_hydrophone_finding;
 bool task_hy_getDirection;
 
+bool task_cvTesting;
+
 bool task_emergeToTop_2;
 
 bool task_turnOffMotors;
@@ -253,7 +256,7 @@ int main(int argc, char **argv){
   ros::Subscriber takePictureSubscriber = node.subscribe("take_picture_status", 100,takePictureCallback);
 
   //---------------------------------------------------------
-  ros::Subscriber cvSubscriber = node.subscribe("cv_to_master", 0, CVInCallback);
+  ros::Subscriber cvSubscriber = node.subscribe("cv_to_master", 100, CVInCallback);
   //---------------------------------------------------------
   ros::Publisher cvPublisher = node.advertise<auv_cal_state_la_2017::CVOut>("master_to_cv", 100);
   //---------------------------------------------------------
@@ -375,6 +378,8 @@ int main(int argc, char **argv){
 
   task_hydrophone_finding       = true;
   task_hy_getDirection          = true;
+
+  task_cvTesting                = true;
 
   task_emergeToTop_2            = false;
 
@@ -1918,6 +1923,17 @@ int main(int argc, char **argv){
   resetVariables();
 
   //Task =======================================================================
+  while (ros::ok() && !task_cvTesting){
+    setCVOut(1.0);
+    cvPublisher.publish(cvOut);
+    ros::spinOnce();
+    loop_rate.sleep();
+  }
+  cvVStop();
+  cvHStop();
+  resetVariables();
+
+  //Task =======================================================================
   if(!task_turnOffMotors) ROS_INFO("Turning off motors...");
   while(ros::ok() && !task_turnOffMotors){
     if(!receivedFromHControl){
@@ -1944,42 +1960,108 @@ int main(int argc, char **argv){
   return 0;
 }
 
+/*
+  angleToTurn = 20;
+  while (ros::ok() && !task_rotateRightXd1){
+    if(!receivedFromRControl){
+      rControl.state = 2;
+      rControl.rotation = angleToTurn;
+      rControlPublisher.publish(rControl);
+    }
+    settingCVInfo(0,0,0,0,0,0);
+    cvInfoPublisher.publish(cvInfo);
+    ros::spinOnce();
+    loop_rate.sleep();
+  }
+
+  heightToMove = 1.5;
+  while(ros::ok() && !task_submergeXft){
+    if(!receivedFromHControl){
+      hControl.state = 0;
+      hControl.depth = heightToMove;
+      hControlPublisher.publish(hControl);
+    }
+    tpMsg.data = 0;
+    takePicturePublisher.publish(tpMsg);
+    settingCVInfo(0,0,0,0,0,0);
+    cvInfoPublisher.publish(cvInfo);
+    ros::spinOnce();
+    loop_rate.sleep();
+  }
+*/
+
 void cvHLeft(){
+  rControl.state = 1;
+  rControlPublisher.publish(rControl);
   ROS_INFO("Sub turning left.");
-  //todo
+  rControl.state = 0;
+  rControl.rotation = -1;
+  rControlPublisher.publish(rControl);
 }
 void cvHRight(){
+  rControl.state = 1;
+  rControlPublisher.publish(rControl);
   ROS_INFO("Sub turning right.");
-  //todo
+  rControl.state = 2;
+  rControl.rotation = -1;
+  rControlPublisher.publish(rControl);
 }
 void cvHStop(){
+  rControl.state = 1;
+  rControlPublisher.publish(rControl);
   ROS_INFO("Sub stopping turn.");
-  //todo
 }
 void cvVUp(){
+  hControl.state = 1
+  hControlPublisher.publish(hControl);
   ROS_INFO("Sub going up.");
-  //todo
+  hControl.state = 2;
+  hControl.depth = -1;
+  hControlPublisher.publish(hControl);
 }
 void cvVDown(){
+  hControl.state = 1
+  hControlPublisher.publish(hControl);
   ROS_INFO("Sub going down.");
-  //todo
+  hControl.state = 0;
+  hControl.depth = -1;
+  hControlPublisher.publish(hControl);
 }
 void cvVStop(){
+  hControl.state = 1
+  hControlPublisher.publish(hControl);
   ROS_INFO("Sub stopping vertical movement.");
-  //todo
 }
 
 void CVInCallback(const auv_cal_state_la_2017::CVIn in){
-  if(in.horizontal < -1 || in.horizontal > 1 || in.vertical < -1 || in.horizontal > 1)
+  if(in.horizontal < -1 || in.horizontal > 1 || in.vertical < -1 || in.horizontal > 1 || task_cvTesting)
     return;
 
-  if(in.found == 1){
-    hFuncs[in.horizontal + 1]();
-    vFuncs[in.vertical + 1]();
+  int offset = 1;
+  cvIn.found = in.found;
+  cvIn.done = in.done;
+  cvIn.horizontal = in.horizontal;
+  cvIn.vertical = in.vertical;
+  cvIn.distance = in.distance;
+  cvIn.targetType = in.targetType;
+
+  if(in.found && !in.done){
+    hFuncs[cvIn.horizontal + offset]();
+    vFuncs[cvIn.vertical + offset]();
+  } else if (in.done){
+    task_cvTesting = true;
+
+    hFuncs[0 + offset]();
+    vFuncs[0 + offset]();
+  } else {
+    hFuncs[0 + offset]();
+    vFuncs[0 + offset]();
   }
 }
 
-
+void setCVOut(float targetType){
+  cvOut.targetType = targetType;
+}
 
 void settingCVInfo(int cameraNum, int taskNum, int givenColor, int givenShape, float givenLength, float givenDistance){
   cvInfo.cameraNumber = cameraNum;
