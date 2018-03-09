@@ -61,8 +61,8 @@ char string[8];
 
 //CHANGED PWM_Motors TO PWM_Motors_depth SINCE THERE ARE 2 DIFFERENT PWM CALCULATIONS
 //ONE IS FOR DEPTH AND THE OTHER IS USED FOR MOTORS TO ROTATE TO PROPER NEW LOCATION
-int PWM_Motors_Depth;
-float dutyCycl_depth;
+// int PWM_Motors_Depth;
+// float dutyCycl_depth;
 float assignedDepth;
 float feetDepth_read;
 
@@ -164,22 +164,24 @@ ros::Subscriber<auv_cal_state_la_2017::FrontCamDistance> frontCamDistanceSubscri
 ros::Subscriber<auv_cal_state_la_2017::BottomCamDistance> bottomCamDistanceSubscriber("bottom_cam_distance", &bottomCamDistanceCallback);
 
 //depth control variables
-int pwm_submerge = 200;
-int pwm_emerge = 250;
+int pwm_submerge = 150;
+int pwm_emerge = 100;
 
 //thrusters off value does not change
 const int base_thrust = 1500;
 
 //base thrust variables to be offset by base_thrust
-int base_thrust_1 = 1500;
-int base_thrust_2 = 1500;
-int base_thrust_3 = 1500;
-int base_thrust_4 = 1500;
+// int base_thrust_1 = 1500;
+// int base_thrust_2 = 1500;
+// int base_thrust_3 = 1500;
+// int base_thrust_4 = 1500;
 
 float elapsedTime, time, timePrev;
 
 //the variable error will store the difference between the real_value_angle form IMU and desired_angle of 0 degrees. 
-float PID_pitch, PID_roll, pwmThruster_2, pwmThruster_1, pwmThruster_3, pwmThruster_4, error_roll, prev_error_roll = 0,error_pitch, prev_error_pitch = 0;
+// float PID_pitch, PID_roll, pwmThruster_2, pwmThruster_1, pwmThruster_3, pwmThruster_4, error_roll, prev_error_roll = 0,error_pitch, prev_error_pitch = 0;
+float PID_pitch, PID_roll, PID_depth, pwmThruster_1, pwmThruster_2, pwmThruster_3, pwmThruster_4, 
+error_roll, prev_error_roll=0, error_pitch, prev_error_pitch=0, error_depth, prev_error_depth=0;
 
 //////////////PID_pitch variables////////////////////
 float pid_p_pitch=0;
@@ -201,13 +203,26 @@ double kd_roll=0.7;//0.75;//2.05;//2.05
 double ki_roll=0.0003;//0.003
 ///////////////////////////////////////////////
 
+//////////////PID_depth variables////////////////////
+float pid_p_depth=0;
+float pid_d_depth=0;
+float pid_i_depth=0;
+/////////////////PID_depth constants/////////////////
+double kp_depth=30;//11;//3.55;//3.55
+double kd_depth=1;//0.75;//2.05;//2.05
+double ki_depth=0.0003;//0.003
+///////////////////////////////////////////////
+
 //double thrust=1500; //initial value of thrust to the thrusters
 float desired_angle = 0; //This is the angle in which we whant the
                          //balance to stay steady
+//// threshold for going_up, going_down and hoover
+float threshold = 0.5;
 ///////////////////////////////////////////////
 
 //stabilization function
 void stabilization();
+// void heightControl();
 
 void setup() {
 
@@ -400,8 +415,8 @@ void loop() {
   //Depth
   //Testing----------------------
   feetDepth_read =  sensor.depth() * 3.28 + 0.23;                                   //1 meter = 3.28 feet
-  dutyCycl_depth = (abs(assignedDepth - feetDepth_read)/ 13.0);              //function to get a percentage of assigned height to the feet read
-  PWM_Motors_Depth = dutyCycl_depth * 400;                                   //PWM for motors are between 1500 - 1900; difference is 400
+  // dutyCycl_depth = (abs(assignedDepth - feetDepth_read)/ 13.0);              //function to get a percentage of assigned height to the feet read
+  // PWM_Motors_Depth = dutyCycl_depth * 400;                                   //PWM for motors are between 1500 - 1900; difference is 400
 
   //Rotation
   //duty cycle and PWM calculation for orientation
@@ -417,7 +432,7 @@ void loop() {
   
   if(subIsReady){
     if(reedVal == LOW){
-      heightControl();
+      // heightControl();
       stabilization();
       rotationControl();
       movementControl();
@@ -787,126 +802,6 @@ void mControlCallback(const auv_cal_state_la_2017::MControl& mControl){
 
 }
 
-/*
-//Going upward
-void goingUpward(){
-
-  float mp = 3;
-  int depthPower = PWM_Motors_Depth * 4;
-  int levelPower = (400 - depthPower) / 45 * mp;
-  //int reversedLevelPower = (PWM_Motors_Depth / 45) * (-1) * mp;
-  int reversedLevelPower = -levelPower / 2;
-
-  for(i = 0; (2 * i) < 90; i++){
-    float t1 = depthPower + i * levelPower;
-    float t2 = depthPower + i * reversedLevelPower;
-    if(t1 > 300) t1 = 300;
-    if(t2 < -200) t2 = -200;
-    
-    //rolled left(positive value)
-    if((roll < -1 *( 2 * i)) && (roll > -1 * (2 * i + 2)) ){   
-      //Boost the left motors
-      //nh.loginfo("up   rolled left");
-      T1.writeMicroseconds(1500 + t1);
-      T2.writeMicroseconds(1500 - t1);
-      //Downgrade the right motors
-      T3.writeMicroseconds(1500 - t2);
-      T4.writeMicroseconds(1500 - t2);
-    }
-    //rolled right(negative value)
-    if((roll > 2 * i) && (roll < (2 * i + 2))){
-      //Boost the right motors
-      //nh.loginfo("up   rolled right");
-      T3.writeMicroseconds(1500 - t1);
-      T4.writeMicroseconds(1500 - t1);
-      //Downgrade the left motors
-      T1.writeMicroseconds(1500 + t2);
-      T2.writeMicroseconds(1500 - t2);
-    }
-    //pitched backward(positive value)
-    if((pitch > 2 * i) && (pitch < (2 * i + 2))){
-      //Boost the back motors
-      //nh.loginfo("up   pitch backward");
-      T1.writeMicroseconds(1500 + t1);
-      T4.writeMicroseconds(1500 - t1);
-      //Downgrade the front motors
-      T2.writeMicroseconds(1500 - t2);
-      T3.writeMicroseconds(1500 - t2);
-    }
-    //pitched forward(negative value)
-    if((pitch < -1 * (2 * i)) && (pitch > -1 * (2 * i + 2))){
-      //Boost the front motors
-      //nh.loginfo("up   pitch forward");
-      T2.writeMicroseconds(1500 - t1);
-      T3.writeMicroseconds(1500 - t1);
-      //Downgrade the back motors
-      T1.writeMicroseconds(1500 + t2);
-      T4.writeMicroseconds(1500 - t2);
-    }
-  }
-
-}
-
-//Going downward
-void goingDownward(){
-
-  float mp = 3;
-  PWM_Motors_Depth = -PWM_Motors_Depth;
-  int depthPower = PWM_Motors_Depth * 4;
-  int levelPower = ((400 + depthPower) / 45) * (-1) * mp;
-  //int reversedLevelPower = ((-1) * PWM_Motors_Depth) / 45 * mp;
-  int reversedLevelPower = -levelPower / 2;
-
-  for (i = 0; (2 * i) < 90; i++){ //loop will start from 0 degrees -> 90 degrees
-    float t1 = depthPower + i * levelPower;
-    float t2 = depthPower + i * reversedLevelPower;
-    if(t1 < -300) t1 = 300;
-    if(t2 > 200) t2 = 200;
-    //rolled left (positive value)
-    if((roll > 2 * i) && (roll < (2 * i + 2))){
-      //Boost the left motors
-      //nh.loginfo("down   rolled left");
-      T1.writeMicroseconds(1500 + t1);
-      T2.writeMicroseconds(1500 - t1);
-      //Downgrade the right motors
-      T3.writeMicroseconds(1500 - t2);
-      T4.writeMicroseconds(1500 - t2);
-    }
-    //rolled right (negative values)
-    if((roll < -1 *( 2 * i)) && (roll > -1 * (2 * i + 2))){
-      //Boost the right motors
-      //nh.loginfo("down   rolled right");
-      T3.writeMicroseconds(1500 - t1);
-      T4.writeMicroseconds(1500 - t1);
-      //Downgrade the left motors
-      T1.writeMicroseconds(1500 + t2);
-      T2.writeMicroseconds(1500 - t2);
-    }
-    //pitched back (positive value)
-    if((pitch < -1 * (2 * i)) && (pitch > -1 * (2 * i + 2))){
-      //Boost the back motors
-      //nh.loginfo("down   pitch backward");
-      T1.writeMicroseconds(1500 + t1);
-      T4.writeMicroseconds(1500 - t1);
-      //Downgrade the front motors
-      T2.writeMicroseconds(1500 - t2);
-      T3.writeMicroseconds(1500 - t2);
-    }
-    //pitched forward (negative value)
-    if((pitch > 2 * i) && (pitch < (2 * i + 2))){
-      //Boost the front motors
-      //nh.loginfo("down   pitch forward");
-      T2.writeMicroseconds(1500 - t1);
-      T3.writeMicroseconds(1500 - t1);
-      //Downgrade the back motors
-      T1.writeMicroseconds(1500 + t2);
-      T4.writeMicroseconds(1500 - t2);
-    }
-  }
-
-}
-*/
-
 //roll left is negative roll right is positive (roll currently inverted of this)
 //pitch backward is positive pitch forward is negative
 void stabilization(){
@@ -920,9 +815,11 @@ void stabilization(){
   
   error_pitch = pitch - desired_angle; 
   error_roll = roll - desired_angle;
+  error_depth = feetDepth_read - assignedDepth;
   
   pid_p_pitch = kp_pitch*error_pitch;
-  pid_p_roll = kp_pitch*error_roll;
+  pid_p_roll = kp_roll*error_roll;
+  pid_p_depth = kp_depth*error_depth;
   
   if(-1 < error_pitch < 1){
     pid_i_pitch = pid_i_pitch+(ki_pitch*error_pitch);  
@@ -931,52 +828,114 @@ void stabilization(){
   if(-1 < error_roll < 1){
     pid_i_roll = pid_i_roll+(ki_roll*error_roll);
   } 
+
+  if(-1 < error_depth < 1)
+  {
+    pid_i_depth = pid_i_depth+(ki_depth*error_depth);
+  } 
   
   pid_d_pitch = kd_pitch*((error_pitch - prev_error_pitch)/elapsedTime);
-  pid_d_roll = kd_pitch*((error_roll - prev_error_roll)/elapsedTime);
+  pid_d_roll = kd_roll*((error_roll - prev_error_roll)/elapsedTime);
+  pid_d_depth = kd_depth*((error_depth - prev_error_depth)/elapsedTime);
   
   PID_pitch = pid_p_pitch + pid_i_pitch + pid_d_pitch;
   PID_roll = pid_p_roll + pid_i_roll + pid_d_roll;
+  PID_depth = pid_p_depth + pid_i_depth + pid_d_depth;
 
+  //max pid adjustment is full 800 which is the range of motor power
   if(PID_pitch < -800){PID_pitch=-800;}
   if(PID_pitch > 800){PID_pitch=800;}
   if(PID_roll < -800){PID_roll=-800;}
   if(PID_roll > 800){PID_roll=800;}
 
-    //Stabilization sum
-  pwmThruster_1 = base_thrust_1 - PID_pitch - PID_roll;
-  pwmThruster_2 = base_thrust_2 + PID_pitch - PID_roll;
-  pwmThruster_3 = base_thrust_3 + PID_pitch + PID_roll;
-  pwmThruster_4 = base_thrust_4 - PID_pitch + PID_roll;
+  //depth max speed set to pwm_submerge and pwm_emerge
+  //negative number for submerge
+  if(PID_depth < -pwm_submerge){PID_depth=-pwm_submerge;}
+  //positive for emerge
+  if(PID_depth > pwm_emerge){PID_depth=pwm_emerge;}
+
+  //   //Stabilization sum
+  // pwmThruster_1 = base_thrust_1 - PID_pitch - PID_roll;
+  // pwmThruster_2 = base_thrust_2 + PID_pitch - PID_roll;
+  // pwmThruster_3 = base_thrust_3 + PID_pitch + PID_roll;
+  // pwmThruster_4 = base_thrust_4 - PID_pitch + PID_roll;
   
+  // //Thruster_1
+  // if(pwmThruster_1 < 1100){pwmThruster_1 = 1100;}
+  // if(pwmThruster_1 > 1900){pwmThruster_1 = 1900;}
+  // //Thruster_2
+  // if(pwmThruster_2 < 1100){pwmThruster_2 = 1100;}
+  // if(pwmThruster_2 > 1900){pwmThruster_2 = 1900;}
+  // //Thruster_3
+  // if(pwmThruster_3 < 1100){pwmThruster_3 = 1100;}
+  // if(pwmThruster_3 > 1900){pwmThruster_3 = 1900;}
+  // //Thruster_4
+  // if(pwmThruster_4 < 1100){pwmThruster_4 = 1100;}
+  // if(pwmThruster_4 > 1900){pwmThruster_4 = 1900;}
+  
+  //Emerging and submerging thruster pwm requirments:
+  /*Submerging: pwmThruster_1 > 1500 
+                pwmThruster_2 < 1500
+                pwmThruster_3 > 1500 
+                pwmThruster_4 < 1500
+
+    Emerging:   pwmThruster_1 < 1500 
+                pwmThruster_2 > 1500
+                pwmThruster_3 < 1500 
+                pwmThruster_4 > 1500         
+  */
+
+  //emerging                                           
+  if (assignedDepth < (feetDepth_read - threshold )){
+    pwmThruster_1 = base_thrust - PID_pitch - PID_roll - PID_depth;
+    pwmThruster_2 = base_thrust + PID_pitch - PID_roll + PID_depth;
+    pwmThruster_3 = base_thrust - PID_pitch + PID_roll - PID_depth;
+    pwmThruster_4 = base_thrust + PID_pitch + PID_roll + PID_depth;
+  }
+
+  //submerging
+  else if (assignedDepth > (feetDepth_read + threshold)){
+    pwmThruster_1 = base_thrust - PID_pitch - PID_roll - PID_depth;
+    pwmThruster_2 = base_thrust + PID_pitch - PID_roll + PID_depth;
+    pwmThruster_3 = base_thrust - PID_pitch + PID_roll - PID_depth;
+    pwmThruster_4 = base_thrust + PID_pitch + PID_roll + PID_depth;
+  }
+  
+  //////Stabilization sum
+  else{
+    if(isGoingUp || isGoingDown){
+      isGoingUp = false;
+      isGoingDown = false;
+      nh.loginfo("Assigned depth reached.\n");
+    }
+
+    pwmThruster_1 = base_thrust - PID_pitch - PID_roll;
+    pwmThruster_2 = base_thrust + PID_pitch - PID_roll;
+    pwmThruster_3 = base_thrust - PID_pitch + PID_roll;
+    pwmThruster_4 = base_thrust + PID_pitch + PID_roll;
+
+    hControlStatus.state = 1;
+    hControlStatus.depth = 0;
+    hControlPublisher.publish(&hControlStatus);
+  }
+
+  ///////////Thruster power buffer//////////////
   //Thruster_1
-  if(pwmThruster_1 < 1100){pwmThruster_1 = 1100;}
-  if(pwmThruster_1 > 1900){pwmThruster_1 = 1900;}
+  if(pwmThruster_1 < 1100){pwmThruster_1= 1100;}
+  if(pwmThruster_1 > 1900){pwmThruster_1=1900;}
   //Thruster_2
-  if(pwmThruster_2 < 1100){pwmThruster_2 = 1100;}
-  if(pwmThruster_2 > 1900){pwmThruster_2 = 1900;}
+  if(pwmThruster_2 < 1100){pwmThruster_2= 1100;}
+  if(pwmThruster_2 > 1900){pwmThruster_2=1900;}
   //Thruster_3
-  if(pwmThruster_3 < 1100){pwmThruster_3 = 1100;}
-  if(pwmThruster_3 > 1900){pwmThruster_3 = 1900;}
+  if(pwmThruster_3 < 1100){pwmThruster_3= 1100;}
+  if(pwmThruster_3 > 1900){pwmThruster_3=1900;}
   //Thruster_4
-  if(pwmThruster_4 < 1100){pwmThruster_4 = 1100;}
-  if(pwmThruster_4 > 1900){pwmThruster_4 = 1900;}
-  
+  if(pwmThruster_4 < 1100){pwmThruster_4= 1100;}
+  if(pwmThruster_4 > 1900){pwmThruster_4=1900;}
           
   prev_error_pitch = error_pitch;
   prev_error_roll = error_roll;
-  
-  //Emerging and submerging thruster pwm requirments:
-    /*Submerging: pwmThruster_1 > 1500 
-                  pwmThruster_2 < 1500
-                  pwmThruster_3 > 1500 
-                  pwmThruster_4 < 1500
-  
-      Emerging:   pwmThruster_1 < 1500 
-                  pwmThruster_2 > 1500
-                  pwmThruster_3 < 1500 
-                  pwmThruster_4 > 1500         
-    */
+  prev_error_depth = error_depth;
   
   /*Create the PWM pulses with the calculated width for each pulse*/
   T1.writeMicroseconds(pwmThruster_1);
@@ -985,6 +944,7 @@ void stabilization(){
   T4.writeMicroseconds(pwmThruster_4);
 }
 
+/*
 void heightControl(){
   if(reedVal == HIGH){
     return;
@@ -1026,7 +986,7 @@ void heightControl(){
     // base_thrust_3 = base_thrust;
     // base_thrust_4 = base_thrust;
   }
-  
+
   //Reach the height
   if (feetDepth_read < assignedDepth + heightError && feetDepth_read > assignedDepth - heightError) {
     if(isGoingUp || isGoingDown){
@@ -1045,6 +1005,7 @@ void heightControl(){
   }
 
 }
+*/
 
 //read rotation is from -193.8 to 166.2
 void rotationControl(){
