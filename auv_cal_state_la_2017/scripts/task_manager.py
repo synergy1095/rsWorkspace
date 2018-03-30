@@ -108,8 +108,17 @@ class TaskManager:
         """ Then sending the coordinates back to HOUSTON """
         """ which will be sent from HOUSTON to NAVIGATION """
         """ ********************************************* """
-        print("detect_buoy")
+        #print("detect_buoy")
         found, buoy_coordinates = self.detectbuoy.detect()
+        if buoy_coordinates[0] <= -1:
+            buoy_coordinates[0] = 1
+        elif buoy_coordinates[0] >= 1:
+            buoy_coordinates[0] = -1
+
+        if buoy_coordinates[1] <= -1:
+            buoy_coordinates[1] = 1
+        elif buoy_coordinates[1] >= 1:
+            buoy_coordinates[1] = -1
 
         # TODO send coordinates to Houston
         return found, buoy_coordinates

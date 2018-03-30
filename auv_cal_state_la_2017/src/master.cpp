@@ -232,6 +232,7 @@ bool task_hydrophone_finding;
 bool task_hy_getDirection;
 
 bool task_cvTesting;
+bool task_cvTesting_started;
 
 bool task_emergeToTop_2;
 
@@ -356,8 +357,8 @@ int main(int argc, char **argv){
   task_mode5Movement1           = true;
   task_mode5Movement2           = true;
   task_rotateRightXd4           = true;
-  task_mode5Movement3           = false;
-  task_mode5Movement4           = false;
+  task_mode5Movement3           = true; //
+  task_mode5Movement4           = true; //
 
   task_pneumaticsControl1       = true;
   task_pneumaticsControl2       = true;
@@ -377,9 +378,9 @@ int main(int argc, char **argv){
   task_gate2_break              = true;
   task_gate2_emergeToTop        = true;
 
-  task_rotateLeftXd4            = true;
-  task_mode5Movement5           = false;
-  task_mode5Movement6           = false;
+  task_rotateLeftXd4            = true; //
+  task_mode5Movement5           = true; //
+  task_mode5Movement6           = true; //
 
   task_buoy1_submergeXft        = true;
   task_buoy1_findBuoy           = true;
@@ -405,11 +406,12 @@ int main(int argc, char **argv){
   task_hydrophone_finding       = true;
   task_hy_getDirection          = true;
 
-  task_cvTesting                = true;
+  task_cvTesting                = false;
+  task_cvTesting_started        = false; //do not change
 
-  task_emergeToTop_2            = false;
+  task_emergeToTop_2            = true;
 
-  task_turnOffMotors            = false;
+  task_turnOffMotors            = true;
 
 
   // ROS_INFO("Master starts running. Checking each topic...");
@@ -1208,7 +1210,7 @@ int main(int argc, char **argv){
   }
 
   resetVariables();
-  breakBetweenTasks(5);
+  // breakBetweenTasks(5);
   
   //settingCVInfo(cameraNum,taskNum,givenColor,givenShape,givenLength,givenDistance)
   //Task =======================================================================
@@ -1931,7 +1933,7 @@ int main(int argc, char **argv){
   }
 
   resetVariables();
-  breakBetweenTasks(10);
+  // breakBetweenTasks(10);
 
   //Task =======================================================================
   while (ros::ok() && !task_emergeToTop_2){
@@ -1954,6 +1956,7 @@ int main(int argc, char **argv){
     cvPublisher.publish(cvOut);
     ros::spinOnce();
     loop_rate.sleep();
+    task_cvTesting_started=true;
   }
   resetVariables();
 
@@ -2058,8 +2061,8 @@ void cvVStop(){
 }
 
 void CVInCallback(const auv_cal_state_la_2017::CVIn in){
-  // if(in.horizontal < -1 || in.horizontal > 1 || in.vertical < -1 || in.horizontal > 1 || task_cvTesting)
-  //   return;
+  if(in.horizontal < -1 || in.horizontal > 1 || in.vertical < -1 || in.horizontal > 1 || !task_cvTesting_started)
+    return;
 
   int offset = 1;
   cvIn.found = in.found;
@@ -2123,6 +2126,7 @@ void readHydrophone(){
 
 
 void resetVariables(){
+  task_cvTesting_started = false;
   receivedFromPControl = false;
   receivedFromRControl = false;
   receivedFromHControl = false;

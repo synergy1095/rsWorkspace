@@ -164,11 +164,11 @@ ros::Subscriber<auv_cal_state_la_2017::FrontCamDistance> frontCamDistanceSubscri
 ros::Subscriber<auv_cal_state_la_2017::BottomCamDistance> bottomCamDistanceSubscriber("bottom_cam_distance", &bottomCamDistanceCallback);
 
 //depth control variables
-int pwm_submerge = 150;
-int pwm_emerge = 100;
+int pwm_submerge = 200;
+int pwm_emerge = 150;
 
 //thrusters off value does not change
-const int base_thrust = 1500;
+const float base_thrust = 1500;
 
 //base thrust variables to be offset by base_thrust
 // int base_thrust_1 = 1500;
@@ -208,7 +208,7 @@ float pid_p_depth=0;
 float pid_d_depth=0;
 float pid_i_depth=0;
 /////////////////PID_depth constants/////////////////
-double kp_depth=30;//11;//3.55;//3.55
+double kp_depth=250;//11;//3.55;//3.55
 double kd_depth=1;//0.75;//2.05;//2.05
 double ki_depth=0.0003;//0.003
 ///////////////////////////////////////////////
@@ -829,7 +829,7 @@ void stabilization(){
     pid_i_roll = pid_i_roll+(ki_roll*error_roll);
   } 
 
-  if(-1 < error_depth < 1)
+  if(-0.5 < error_depth < 0.5)
   {
     pid_i_depth = pid_i_depth+(ki_depth*error_depth);
   } 
@@ -850,9 +850,9 @@ void stabilization(){
 
   //depth max speed set to pwm_submerge and pwm_emerge
   //negative number for submerge
-  if(PID_depth < -pwm_submerge){PID_depth=-pwm_submerge;}
+  if(PID_depth < -pwm_submerge){PID_depth = -pwm_submerge;}
   //positive for emerge
-  if(PID_depth > pwm_emerge){PID_depth=pwm_emerge;}
+  if(PID_depth > pwm_emerge){PID_depth = pwm_emerge;}
 
   //   //Stabilization sum
   // pwmThruster_1 = base_thrust_1 - PID_pitch - PID_roll;
@@ -937,6 +937,10 @@ void stabilization(){
   prev_error_roll = error_roll;
   prev_error_depth = error_depth;
   
+  char temp[8];
+  dtostrf(pwmThruster_1, 8, 0, temp);
+  nh.loginfo(temp);
+
   /*Create the PWM pulses with the calculated width for each pulse*/
   T1.writeMicroseconds(pwmThruster_1);
   T2.writeMicroseconds(pwmThruster_2);
