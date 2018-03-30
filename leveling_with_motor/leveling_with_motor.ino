@@ -1122,6 +1122,9 @@ void rotationControl(){
       isTurningLeft = false;
       nh.loginfo("Assigned rotation reached.\n");
     }
+    T5.writeMicroseconds(1500);
+    T7.writeMicroseconds(1500);
+
     rControlStatus.state = 1;
     rControlStatus.rotation = 0;
     rControlPublisher.publish(&rControlStatus);

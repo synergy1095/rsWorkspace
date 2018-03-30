@@ -2058,8 +2058,8 @@ void cvVStop(){
 }
 
 void CVInCallback(const auv_cal_state_la_2017::CVIn in){
-  if(in.horizontal < -1 || in.horizontal > 1 || in.vertical < -1 || in.horizontal > 1 || task_cvTesting)
-    return;
+  // if(in.horizontal < -1 || in.horizontal > 1 || in.vertical < -1 || in.horizontal > 1 || task_cvTesting)
+  //   return;
 
   int offset = 1;
   cvIn.found = in.found;
