@@ -1,3 +1,0 @@
-float32 bottomCamForwardDistance
-float32 bottomCamHorizontalDistance
-float32 bottomCamVerticalDistance
