@@ -1,0 +1,8 @@
+prefix=/u02/vnproglib-1.1/cpp/examples/ez_async_data/devel
+
+Name: ez_async_data
+Description: Description of ez_async_data
+Version: 0.0.0
+Cflags: -I/u02/vnproglib-1.1/cpp/examples/ez_async_data/devel/include
+Libs: -L/u02/vnproglib-1.1/cpp/examples/ez_async_data/devel/lib 
+Requires: message_runtime
