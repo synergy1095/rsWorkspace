@@ -3140,13 +3140,13 @@ void hydrophoneCallback(const auv_cal_state_la_2017::Hydrophone hy){
   else if(!task_cv_centering_1){}
   else if(!task_hydrophone_finding){
     ROS_INFO("Message received.");
-    hydrophoneDirection = hy.direction;
-    hydrophoneAngle = hy.angle;
+    // hydrophoneDirection = hy.direction;
+    // hydrophoneAngle = hy.angle;
   }
   else if(!task_hy_getDirection){
     if(readingHydrophone && hydrophoneLastRead){
       ROS_INFO("Hydrophone read.");
-      hydrophoneDirection = hy.direction;
+      // hydrophoneDirection = hy.direction;
       readingHydrophone = false;
       hydrophoneLastRead = false;
     }
