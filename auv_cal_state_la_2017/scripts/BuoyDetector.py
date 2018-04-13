@@ -37,9 +37,9 @@ class BuoyDetector:
         for x, y, w, h in regions_of_interest:
             cv2.rectangle(frame, (x,y), (x+w, y+h), utils.colors["red"], 2)
         '''
-        #clone = frame.copy()
+        clone = frame.copy()
 
-        #cv2.imshow('frame',frame)
+        cv2.imshow('frame',frame)
         buoy = self.classifier.classify(frame, regions_of_interest)
 
         if buoy == None:
